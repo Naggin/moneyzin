@@ -44,3 +44,18 @@ export async function createTransaction(formData: FormData) {
   // 6. Manda o Next.js atualizar a tela do Dashboard para mostrar os números novos
   revalidatePath("/dashboard");
 }
+
+export async function deleteTransaction(transactionId: string) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Usuário não logado");
+
+  // Manda o Prisma deletar a transação que tenha esse ID específico
+  await prisma.transaction.delete({
+    where: {
+      id: transactionId,
+    },
+  });
+
+  // Atualiza a tela do Dashboard para o card de saldo recalcular instantaneamente
+  revalidatePath("/dashboard");
+}

@@ -3,6 +3,7 @@ import prisma from "../lib/prisma";
 import { redirect } from "next/navigation";
 import AddTransactionModal from "../components/AddTransactionModal";
 import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import DeleteButton from "../components/DeleteButton";
 
 export default async function DashboardPage() {
   const { userId } = await auth();
@@ -97,7 +98,7 @@ export default async function DashboardPage() {
           <h2 className="font-bold text-gray-800">Transações Recentes</h2>
         </div>
         <div className="divide-y divide-gray-50">
-          {transactions.length === 0 ? (
+         {transactions.length === 0 ? (
             <p className="p-8 text-center text-gray-400">Nenhuma transação encontrada.</p>
           ) : (
             transactions.reverse().slice(0, 5).map((t) => (
@@ -106,9 +107,16 @@ export default async function DashboardPage() {
                   <p className="font-medium text-gray-800">{t.description}</p>
                   <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
                 </div>
-                <p className={`font-semibold ${t.type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'}`}>
-                  {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
-                </p>
+                
+                {/* Agrupamos o valor e o botão na mesma linha */}
+                <div className="flex items-center">
+                  <p className={`font-semibold ${t.type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'}`}>
+                    {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
+                  </p>
+                  
+                  {/* Nossa lixeira nova entra aqui! */}
+                  <DeleteButton transactionId={t.id} />
+                </div>
               </div>
             ))
           )}
