@@ -1,41 +1,118 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "../lib/prisma";
 import { redirect } from "next/navigation";
+import AddTransactionModal from "../components/AddTransactionModal";
+import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
 
 export default async function DashboardPage() {
-  // 1. Pega quem está logado lá no Clerk
   const { userId } = await auth();
   const user = await currentUser();
 
-  // 2. Se por algum milagre o segurança deixar passar alguém sem login, a gente chuta de volta
   if (!userId || !user) {
     redirect("/sign-in");
   }
 
-  // 3. A Mágica do UPSERT (Sincronizando Clerk com o nosso Banco Supabase)
+  // 1. Sincroniza o usuário (Upsert)
   const dbUser = await prisma.user.upsert({
     where: { id: userId },
-    update: {}, // Se já existir, não faz nada
-    create: {   // Se não existir, cria com os dados do Clerk!
+    update: {},
+    create: {
       id: userId,
       email: user.emailAddresses[0].emailAddress,
       name: user.firstName || "Usuário",
     },
   });
 
-  // 4. A Interface que o usuário vai ver
+  // 2. BUSCA AS TRANSAÇÕES: Pegamos todas as transações deste usuário no banco
+  const transactions = await prisma.transaction.findMany({
+    where: { userId },
+  });
+
+  // 3. MATEMÁTICA FINANCEIRA: Calculamos os totais
+  const totalIncomes = transactions
+    .filter((t) => t.type === "INCOME")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const totalExpenses = transactions
+    .filter((t) => t.type === "EXPENSE")
+    .reduce((acc, t) => acc + t.amount, 0);
+
+  const balance = totalIncomes - totalExpenses;
+
+  // Função auxiliar para formatar em R$
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-gray-50 p-8">
-      <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center max-w-md w-full">
-        <div className="w-16 h-16 bg-emerald-100 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
-          {dbUser.name?.charAt(0)}
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">
+            Olá, {dbUser.name?.split(" ")[0]}! 👋
+          </h1>
+          <p className="text-gray-500 mt-1">Aqui está o resumo das suas finanças.</p>
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">
-          Olá, {dbUser.name}! 👋
-        </h1>
-        <p className="text-gray-500">
-          Seu usuário do Clerk acabou de ser salvo no banco de dados do Supabase. O back-end está 100% vivo!
-        </p>
+        <AddTransactionModal />
+      </div>
+
+      {/* CARDS DE SALDO REAIS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Card Saldo Total */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-3 text-gray-500 mb-2">
+            <Wallet size={20} />
+            <span className="text-sm font-medium">Saldo Total</span>
+          </div>
+          <p className={`text-2xl font-bold ${balance >= 0 ? 'text-gray-800' : 'text-red-600'}`}>
+            {formatCurrency(balance)}
+          </p>
+        </div>
+
+        {/* Card Receitas */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-3 text-emerald-500 mb-2">
+            <TrendingUp size={20} />
+            <span className="text-sm font-medium">Receitas</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800">{formatCurrency(totalIncomes)}</p>
+        </div>
+
+        {/* Card Despesas */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div className="flex items-center gap-3 text-red-500 mb-2">
+            <TrendingDown size={20} />
+            <span className="text-sm font-medium">Despesas</span>
+          </div>
+          <p className="text-2xl font-bold text-gray-800">{formatCurrency(totalExpenses)}</p>
+        </div>
+      </div>
+
+      {/* LISTA DE TRANSAÇÕES RECENTES */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-50">
+          <h2 className="font-bold text-gray-800">Transações Recentes</h2>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {transactions.length === 0 ? (
+            <p className="p-8 text-center text-gray-400">Nenhuma transação encontrada.</p>
+          ) : (
+            transactions.reverse().slice(0, 5).map((t) => (
+              <div key={t.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
+                <div>
+                  <p className="font-medium text-gray-800">{t.description}</p>
+                  <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                </div>
+                <p className={`font-semibold ${t.type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'}`}>
+                  {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
+                </p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
