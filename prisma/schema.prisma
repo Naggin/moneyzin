@@ -1,0 +1,44 @@
+// Configurações base do Prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// Nossas Tabelas (Models)
+// ----------------------------------------------------
+
+model User {
+  id           String        @id @default(uuid())
+  email        String        @unique
+  name         String?
+  transactions Transaction[] 
+  createdAt    DateTime      @default(now())
+}
+
+model Category {
+  id           String        @id @default(uuid())
+  name         String
+  color        String        
+  type         String        // "INCOME" (Receita) ou "EXPENSE" (Despesa)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(uuid())
+  description String
+  amount      Float    
+  date        DateTime @default(now())
+  type        String   
+  
+  // Relacionamentos (Conexões entre as tabelas)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+}
