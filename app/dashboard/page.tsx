@@ -2,10 +2,11 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "../lib/prisma";
 import { redirect } from "next/navigation";
 import AddTransactionModal from "../components/AddTransactionModal";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import SummaryCards from "../components/SummaryCards";
 import DeleteButton from "../components/DeleteButton";
 
 export default async function DashboardPage() {
+  // 1. Autenticação e Segurança
   const { userId } = await auth();
   const user = await currentUser();
 
@@ -13,7 +14,7 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  // 1. Sincroniza o usuário (Upsert)
+  // 2. Sincronização de Usuário (Upsert)
   const dbUser = await prisma.user.upsert({
     where: { id: userId },
     update: {},
@@ -24,12 +25,15 @@ export default async function DashboardPage() {
     },
   });
 
-  // 2. BUSCA AS TRANSAÇÕES: Pegamos todas as transações deste usuário no banco
+  // 3. Busca de Dados: Pegamos todas as transações do banco
   const transactions = await prisma.transaction.findMany({
     where: { userId },
+    orderBy: {
+      date: 'desc' // Já traz as mais recentes primeiro
+    }
   });
 
-  // 3. MATEMÁTICA FINANCEIRA: Calculamos os totais
+  // 4. Cálculos Matemáticos
   const totalIncomes = transactions
     .filter((t) => t.type === "INCOME")
     .reduce((acc, t) => acc + t.amount, 0);
@@ -40,7 +44,7 @@ export default async function DashboardPage() {
 
   const balance = totalIncomes - totalExpenses;
 
-  // Função auxiliar para formatar em R$
+  // Função auxiliar para formatar moeda na lista
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -50,6 +54,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8">
+      {/* Cabeçalho */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">
@@ -60,61 +65,38 @@ export default async function DashboardPage() {
         <AddTransactionModal />
       </div>
 
-      {/* CARDS DE SALDO REAIS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Card Saldo Total */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 text-gray-500 mb-2">
-            <Wallet size={20} />
-            <span className="text-sm font-medium">Saldo Total</span>
-          </div>
-          <p className={`text-2xl font-bold ${balance >= 0 ? 'text-gray-800' : 'text-red-600'}`}>
-            {formatCurrency(balance)}
-          </p>
-        </div>
+      {/* Cards de Resumo (Com o olhinho de ocultar) */}
+      <SummaryCards 
+        balance={balance} 
+        incomes={totalIncomes} 
+        expenses={totalExpenses} 
+      />
 
-        {/* Card Receitas */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 text-emerald-500 mb-2">
-            <TrendingUp size={20} />
-            <span className="text-sm font-medium">Receitas</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800">{formatCurrency(totalIncomes)}</p>
-        </div>
-
-        {/* Card Despesas */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-3 text-red-500 mb-2">
-            <TrendingDown size={20} />
-            <span className="text-sm font-medium">Despesas</span>
-          </div>
-          <p className="text-2xl font-bold text-gray-800">{formatCurrency(totalExpenses)}</p>
-        </div>
-      </div>
-
-      {/* LISTA DE TRANSAÇÕES RECENTES */}
+      {/* Lista de Transações */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-50">
           <h2 className="font-bold text-gray-800">Transações Recentes</h2>
         </div>
+        
         <div className="divide-y divide-gray-50">
-         {transactions.length === 0 ? (
+          {transactions.length === 0 ? (
             <p className="p-8 text-center text-gray-400">Nenhuma transação encontrada.</p>
           ) : (
-            transactions.reverse().slice(0, 5).map((t) => (
+            transactions.slice(0, 10).map((t) => (
               <div key={t.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
                 <div>
                   <p className="font-medium text-gray-800">{t.description}</p>
-                  <p className="text-xs text-gray-400">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(t.date).toLocaleDateString('pt-BR')}
+                  </p>
                 </div>
                 
-                {/* Agrupamos o valor e o botão na mesma linha */}
                 <div className="flex items-center">
                   <p className={`font-semibold ${t.type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'}`}>
                     {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
                   </p>
                   
-                  {/* Nossa lixeira nova entra aqui! */}
+                  {/* Botão de Excluir */}
                   <DeleteButton transactionId={t.id} />
                 </div>
               </div>
