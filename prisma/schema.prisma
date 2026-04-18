@@ -20,25 +20,15 @@ model User {
   createdAt    DateTime      @default(now())
 }
 
-model Category {
-  id           String        @id @default(uuid())
-  name         String
-  color        String        
-  type         String        // "INCOME" (Receita) ou "EXPENSE" (Despesa)
-  transactions Transaction[]
-}
-
 model Transaction {
   id          String   @id @default(uuid())
   description String
-  amount      Float    
+  amount      Float
+  type        String   // "INCOME" ou "EXPENSE"
+  category    String   @default("Outros")
   date        DateTime @default(now())
-  type        String   
   
   // Relacionamentos (Conexões entre as tabelas)
   userId      String
   user        User     @relation(fields: [userId], references: [id])
-  
-  categoryId  String
-  category    Category @relation(fields: [categoryId], references: [id])
 }

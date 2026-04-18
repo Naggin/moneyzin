@@ -81,6 +81,23 @@ export default function AddTransactionModal() {
                 </div>
               </div>
 
+              {/* NOVO CAMPO: CATEGORIA */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <select 
+                  name="category" 
+                  required
+                  className="w-full border border-gray-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow bg-white"
+                >
+                  <option value="Alimentação">🍔 Alimentação</option>
+                  <option value="Transporte">🚗 Transporte</option>
+                  <option value="Moradia">🏠 Moradia</option>
+                  <option value="Salário">💰 Salário</option>
+                  <option value="Lazer">🍿 Lazer</option>
+                  <option value="Outros">📦 Outros</option>
+                </select>
+              </div>
+
               <button 
                 type="submit" 
                 className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-medium transition-colors mt-6 shadow-sm"
