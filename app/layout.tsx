@@ -17,7 +17,8 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="pt-BR">
+      {/* A MÁGICA ACONTECE AQUI: adicionamos suppressHydrationWarning */}
+      <html lang="pt-BR" suppressHydrationWarning>
         <body className={inter.className}>{children}</body>
       </html>
     </ClerkProvider>
