@@ -5,6 +5,18 @@ import AddTransactionModal from "../components/AddTransactionModal";
 import SummaryCards from "../components/SummaryCards";
 import DeleteButton from "../components/DeleteButton";
 
+// Função auxiliar para dar cores dinâmicas às etiquetas de categoria
+const getCategoryStyles = (category: string) => {
+  switch (category) {
+    case "Alimentação": return "bg-orange-100 text-orange-700";
+    case "Transporte": return "bg-blue-100 text-blue-700";
+    case "Moradia": return "bg-purple-100 text-purple-700";
+    case "Salário": return "bg-emerald-100 text-emerald-700";
+    case "Lazer": return "bg-pink-100 text-pink-700";
+    default: return "bg-gray-100 text-gray-700"; // Para "Outros" ou antigas
+  }
+};
+
 export default async function DashboardPage() {
   // 1. Autenticação e Segurança
   const { userId } = await auth();
@@ -85,13 +97,19 @@ export default async function DashboardPage() {
             transactions.slice(0, 10).map((t) => (
               <div key={t.id} className="p-4 flex justify-between items-center hover:bg-gray-50 transition-colors">
                 <div>
-                  <p className="font-medium text-gray-800">{t.description}</p>
-                  <p className="text-xs text-gray-400">
+                  {/* Container Flex para alinhar Título e Etiqueta */}
+                  <div className="flex items-center gap-3">
+                    <p className="font-medium text-gray-800">{t.description}</p>
+                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold tracking-wide uppercase ${getCategoryStyles(t.category)}`}>
+                      {t.category}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
                     {new Date(t.date).toLocaleDateString('pt-BR')}
                   </p>
                 </div>
                 
-                <div className="flex items-center">
+                <div className="flex items-center gap-4">
                   <p className={`font-semibold ${t.type === 'INCOME' ? 'text-emerald-500' : 'text-red-500'}`}>
                     {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
                   </p>
