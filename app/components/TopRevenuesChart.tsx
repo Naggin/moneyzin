@@ -1,6 +1,8 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+// 1. IMPORTAÇÃO DA NUVEM NO TOPO DO ARQUIVO
+import { useVisibility } from "../contexts/VisibilityContext";
 
 // 🪄 A mesma função de formatação
 const formatDescription = (text: string) => {
@@ -35,6 +37,9 @@ const formatDescription = (text: string) => {
 };
 
 export default function TopRevenuesChart({ transactions }: { transactions: any[] }) {
+  // 2. CHAMAMOS A NUVEM NA PRIMEIRA LINHA DA FUNÇÃO
+  const { isVisible } = useVisibility();
+
   const topRevenuesData = transactions
     .filter((t: any) => t.type === "INCOME")
     .sort((a: any, b: any) => b.amount - a.amount)
@@ -62,7 +67,8 @@ export default function TopRevenuesChart({ transactions }: { transactions: any[]
   }
 
   return (
-    <div className="h-[250px] w-full">
+    // 3. A MÁGICA DO DESFOQUE NA DIV PRINCIPAL DO GRÁFICO
+    <div className={`h-[250px] w-full transition-all duration-300 ${!isVisible ? 'blur-md opacity-60 select-none pointer-events-none' : ''}`}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={topRevenuesData}

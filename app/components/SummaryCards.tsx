@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { TrendingUp, TrendingDown, Wallet, Eye, EyeOff } from "lucide-react";
+// 1. Importamos a nossa "Nuvem"
+import { useVisibility } from "../contexts/VisibilityContext"; 
 
-// Aqui definimos que este componente vai receber 3 números do servidor
 interface SummaryProps {
   balance: number;
   incomes: number;
@@ -11,10 +11,9 @@ interface SummaryProps {
 }
 
 export default function SummaryCards({ balance, incomes, expenses }: SummaryProps) {
-  // Estado que controla se o olhinho está aberto ou fechado
-  const [isVisible, setIsVisible] = useState(true);
+  // 2. Trocamos o estado local pelo estado global
+  const { isVisible, toggleVisibility } = useVisibility();
 
-  // Nossa função de formatar, agora com o poder de esconder
   const formatCurrency = (value: number) => {
     if (!isVisible) return "R$ •••••";
     
@@ -26,10 +25,10 @@ export default function SummaryCards({ balance, incomes, expenses }: SummaryProp
 
   return (
     <div className="mb-8">
-      {/* Botão do Olhinho */}
+      {/* Botão do Olhinho - Agora ele muda o estado do aplicativo inteiro! */}
       <div className="flex justify-end mb-4">
         <button
-          onClick={() => setIsVisible(!isVisible)}
+          onClick={toggleVisibility}
           className="flex items-center gap-2 text-gray-500 hover:text-emerald-600 transition-colors font-medium text-sm bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100"
         >
           {isVisible ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -37,7 +36,6 @@ export default function SummaryCards({ balance, incomes, expenses }: SummaryProp
         </button>
       </div>
 
-      {/* Grid de Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all duration-300">
           <div className="flex items-center gap-3 text-gray-500 mb-2">

@@ -1,6 +1,8 @@
 "use client";
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
+// 1. Importação no topo (certo!)
+import { useVisibility } from "../contexts/VisibilityContext";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "Alimentação": "#ea580c", 
@@ -12,15 +14,18 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function CategoryChart({ transactions }: { transactions: any[] }) {
-  // 1. Separa as despesas
+  // 2. Chamamos a nuvem na PRIMEIRA linha da função
+  const { isVisible } = useVisibility();
+
+  // Separa as despesas
   const expenses = transactions.filter((t: any) => t.type === "EXPENSE");
 
-  // 2. NOVIDADE: Calcula o total de RECEITAS para podermos fazer a porcentagem
+  // Calcula o total de RECEITAS para podermos fazer a porcentagem
   const totalIncome = transactions
     .filter((t: any) => t.type === "INCOME")
     .reduce((acc: number, t: any) => acc + t.amount, 0);
 
-  // 3. Agrupa os valores por categoria
+  // Agrupa os valores por categoria
   const dataMap = expenses.reduce((acc: Record<string, number>, transaction: any) => {
     const cat = transaction.category || "Outros";
     acc[cat] = (acc[cat] || 0) + transaction.amount;
@@ -31,7 +36,7 @@ export default function CategoryChart({ transactions }: { transactions: any[] })
     .map(([name, value]: [string, any]) => ({ name, value: Number(value) }))
     .sort((a: any, b: any) => b.value - a.value);
 
-  // 4. NOVIDADE: Turbinando o balãozinho para mostrar R$ e a Porcentagem
+  // Turbinando o balãozinho para mostrar R$ e a Porcentagem
   const formatTooltip = (value: any) => {
     const gasto = Number(value);
     
@@ -59,7 +64,8 @@ export default function CategoryChart({ transactions }: { transactions: any[] })
   }
 
   return (
-    <div className="h-[300px] w-full">
+    // 3. A MÁGICA DO DESFOQUE ACONTECE AQUI NESTA DIV:
+    <div className={`h-[300px] w-full transition-all duration-300 ${!isVisible ? 'blur-md opacity-60 select-none pointer-events-none' : ''}`}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

@@ -1,12 +1,11 @@
 "use client";
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useVisibility } from "../contexts/VisibilityContext";
 
-// 🪄 A nossa função mágica de formatação
 const formatDescription = (text: string) => {
   if (!text) return "";
 
-  // 1. Dicionário de correções automáticas (sem acento -> com acento)
   const correcoes: Record<string, string> = {
     "cartao": "cartão",
     "credito": "crédito",
@@ -22,22 +21,14 @@ const formatDescription = (text: string) => {
     "familia": "família",
   };
 
-  // 2. Preposições que devem ficar sempre em minúsculo
   const preposicoes = ["de", "da", "do", "das", "dos", "e", "em", "na", "no", "com", "sem"];
-
-  // 3. Coloca tudo em minúsculo e separa as palavras
   const palavras = text.toLowerCase().split(" ");
 
   const textoFormatado = palavras.map((palavra, index) => {
-    // Verifica se a palavra está na nossa lista de correção
     let corrigida = correcoes[palavra] || palavra;
-
-    // Se for uma preposição (e não for a primeira palavra), mantém minúscula
     if (preposicoes.includes(corrigida) && index !== 0) {
       return corrigida;
     }
-
-    // Capitaliza a primeira letra e junta com o resto da palavra
     return corrigida.charAt(0).toUpperCase() + corrigida.slice(1);
   });
 
@@ -45,14 +36,14 @@ const formatDescription = (text: string) => {
 };
 
 export default function TopExpensesChart({ transactions }: { transactions: any[] }) {
+  const { isVisible } = useVisibility();
+
   const topExpensesData = transactions
     .filter((t: any) => t.type === "EXPENSE")
     .sort((a: any, b: any) => b.amount - a.amount)
     .slice(0, 5)
     .map((t: any) => {
-      // Passamos a descrição do banco pela nossa função antes de desenhar
       const descBonita = formatDescription(t.description);
-
       return {
         name: descBonita.length > 20 ? descBonita.slice(0, 17) + "..." : descBonita,
         value: t.amount,
@@ -72,7 +63,7 @@ export default function TopExpensesChart({ transactions }: { transactions: any[]
   }
 
   return (
-    <div className="h-[250px] w-full">
+    <div className={`h-[250px] w-full transition-all duration-300 ${!isVisible ? 'blur-md opacity-60 select-none pointer-events-none' : ''}`}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={topExpensesData}
