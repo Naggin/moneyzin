@@ -1,12 +1,17 @@
+"use client"; // Precisamos disso para o Next.js saber ler a rota atual no navegador
+
 import { UserButton } from "@clerk/nextjs";
 import { LayoutDashboard, ArrowRightLeft, Settings } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname(); // O nosso "radar" de páginas
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Menu Lateral (Sidebar) */}
@@ -16,22 +21,33 @@ export default function DashboardLayout({
         </div>
         
         <nav className="flex-1 p-4 space-y-2 mt-4">
+          {/* Link Visão Geral */}
           <Link 
             href="/dashboard" 
-            className="flex items-center gap-3 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl font-medium transition-colors"
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+              pathname === "/dashboard" 
+                ? "bg-emerald-50 text-emerald-600" 
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+            }`}
           >
             <LayoutDashboard size={20} />
             Visão Geral
           </Link>
           
+          {/* Link Transações (AGORA COM O ENDEREÇO CERTO) */}
           <Link 
-            href="#" 
-            className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl font-medium transition-colors"
+            href="/dashboard/transactions" 
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${
+              pathname === "/dashboard/transactions" 
+                ? "bg-emerald-50 text-emerald-600" 
+                : "text-gray-500 hover:bg-gray-50 hover:text-gray-700"
+            }`}
           >
             <ArrowRightLeft size={20} />
             Transações
           </Link>
 
+          {/* Link Configurações (Ainda vazio, para o futuro) */}
           <Link 
             href="#" 
             className="flex items-center gap-3 px-4 py-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl font-medium transition-colors"
