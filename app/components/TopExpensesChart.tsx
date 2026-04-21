@@ -2,6 +2,8 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useVisibility } from "../contexts/VisibilityContext";
+// 1. Importamos o olheiro do Modo Escuro
+import { useTheme } from "next-themes";
 
 const formatDescription = (text: string) => {
   if (!text) return "";
@@ -37,6 +39,8 @@ const formatDescription = (text: string) => {
 
 export default function TopExpensesChart({ transactions }: { transactions: any[] }) {
   const { isVisible } = useVisibility();
+  // 2. Avisamos o componente qual é o tema atual
+  const { theme } = useTheme();
 
   const topExpensesData = transactions
     .filter((t: any) => t.type === "EXPENSE")
@@ -56,11 +60,20 @@ export default function TopExpensesChart({ transactions }: { transactions: any[]
 
   if (topExpensesData.length === 0) {
     return (
-      <div className="flex items-center justify-center h-[250px] text-gray-400">
+      <div className="flex items-center justify-center h-[250px] text-gray-400 dark:text-gray-500">
         Nenhuma despesa registrada.
       </div>
     );
   }
+
+  // 3. Estilos dinâmicos do balãozinho
+  const tooltipStyle = {
+    backgroundColor: theme === 'dark' ? '#1f2937' : '#ffffff',
+    borderColor: theme === 'dark' ? '#374151' : '#e5e7eb',
+    color: theme === 'dark' ? '#f3f4f6' : '#111827',
+    borderRadius: '12px',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+  };
 
   return (
     <div className={`h-[250px] w-full transition-all duration-300 ${!isVisible ? 'blur-md opacity-60 select-none pointer-events-none' : ''}`}>
@@ -70,13 +83,20 @@ export default function TopExpensesChart({ transactions }: { transactions: any[]
           layout="vertical"
           margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f3f4f6" />
+          {/* Ajustamos a cor da grade pontilhada */}
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={theme === 'dark' ? '#374151' : '#f3f4f6'} />
           <XAxis type="number" hide />
-          <YAxis type="category" dataKey="name" stroke="#6b7280" fontSize={12} tickLine={false} axisLine={false} width={100} />
+          {/* Ajustamos a cor do texto do Eixo Y */}
+          <YAxis type="category" dataKey="name" stroke={theme === 'dark' ? '#9ca3af' : '#6b7280'} fontSize={12} tickLine={false} axisLine={false} width={100} />
+          
+          {/* Aplicamos os estilos dinâmicos no Tooltip e adicionamos um cursor de fundo escuro */}
           <Tooltip 
             formatter={formatCurrency}
-            contentStyle={{ border: '1px solid #e5e7eb', borderRadius: '12px', padding: '10px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            contentStyle={tooltipStyle}
+            itemStyle={{ color: theme === 'dark' ? '#e5e7eb' : '#374151' }}
+            cursor={{ fill: theme === 'dark' ? '#374151' : '#f3f4f6' }}
           />
+          
           <Bar dataKey="value" fill="#ef4444" radius={[0, 8, 8, 0]} barSize={24}>
             {topExpensesData.map((entry, index) => (
               <Cell key={`cell-${index}`} fill="#f87171" fillOpacity={1 - index * 0.15} />
