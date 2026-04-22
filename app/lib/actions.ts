@@ -1,54 +1,53 @@
-"use server"; // Isso é mágico: garante que esse código NUNCA vaze para o navegador, roda só no servidor
+"use server";
 
 import prisma from "./prisma";
 import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+// 1. Importamos o contrato de regras que você criou
+import { transactionSchema } from "./schemas";
 
 export async function createTransaction(formData: FormData) {
-  // 1. Pega quem está logado
+  // Segurança: Garante que só usuários logados salvam dados
   const { userId } = await auth();
   if (!userId) throw new Error("Usuário não logado");
 
-  // 2. Extrai os dados que o usuário digitou no formulário (AGORA COM CATEGORIA)
-  const description = formData.get("description") as string;
-  const amountString = formData.get("amount") as string;
-  const type = formData.get("type") as string;
-  const category = formData.get("category") as string;
+  // Transforma o formulário bruto em um objeto simples
+  const rawData = Object.fromEntries(formData.entries());
 
-  // 3. Validação básica de segurança
-  if (!description || !amountString || !type || !category) {
-    throw new Error("Preencha todos os campos");
+  // 2. A MÁGICA: O Zod valida tudo de uma vez (inclusive converte o valor para número)
+  const result = transactionSchema.safeParse(rawData);
+
+  // 3. Se as regras não forem seguidas, lançamos o erro específico
+  if (!result.success) {
+    // Pega a primeira mensagem de erro definida no seu schema.ts
+   throw new Error(result.error.issues[0].message);
   }
 
-  // Converte o texto do valor para número (Float)
-  const amount = parseFloat(amountString.replace(",", "."));
-
-  // 4. Salva de fato no banco de dados!
+  // 4. Salva no banco com os dados já limpos e validados pelo Zod
   await prisma.transaction.create({
     data: {
-      description,
-      amount,
-      type,
-      category, // <-- Mandamos a nossa categoria nova diretamente para cá
+      ...result.data, // Aqui já temos description, amount (como número!), type e category
       userId,
     },
   });
 
-  // 5. Manda o Next.js atualizar a tela do Dashboard para mostrar os números novos
+  // 5. Atualiza o sistema para os novos dados aparecerem instantaneamente
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/transactions");
 }
 
 export async function deleteTransaction(transactionId: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Usuário não logado");
 
-  // Manda o Prisma deletar a transação que tenha esse ID específico
   await prisma.transaction.delete({
     where: {
       id: transactionId,
+      // Segurança extra: só deleta se a transação pertencer ao usuário logado
+      userId: userId, 
     },
   });
 
-  // Atualiza a tela do Dashboard para o card de saldo recalcular instantaneamente
   revalidatePath("/dashboard");
+  revalidatePath("/dashboard/transactions");
 }
