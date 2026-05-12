@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
-import { renderToBuffer } from "@react-pdf/renderer";
-import { createElement } from "react";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
+import { createElement, type ReactElement } from "react";
 import PDFDocument from "@/app/components/PDFDocument";
 
 export const dynamic = "force-dynamic";
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     totalExpense,
   });
 
-  const buffer = await renderToBuffer(document);
+  const buffer = await renderToBuffer(document as ReactElement<DocumentProps>);
 
   const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.pdf`;
 
