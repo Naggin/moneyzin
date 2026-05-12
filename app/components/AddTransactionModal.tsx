@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, X, Pencil } from "lucide-react";
 import { createTransaction, updateTransaction } from "../lib/actions";
+import { CATEGORIES } from "../lib/schemas";
 import { toast } from "sonner";
 
 interface TransactionData {
@@ -157,12 +158,9 @@ export default function AddTransactionModal({ transaction }: Props) {
                   defaultValue={transaction?.category ?? "Alimentação"}
                   className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:text-gray-100 rounded-xl p-3 outline-none focus:ring-2 focus:ring-emerald-500 transition-shadow"
                 >
-                  <option value="Alimentação">Alimentação</option>
-                  <option value="Transporte">Transporte</option>
-                  <option value="Moradia">Moradia</option>
-                  <option value="Salário">Salário</option>
-                  <option value="Lazer">Lazer</option>
-                  <option value="Outros">Outros</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
                 </select>
               </div>
 
