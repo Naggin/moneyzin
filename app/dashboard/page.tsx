@@ -19,8 +19,10 @@ export default async function DashboardPage({
 
   const params = await searchParams;
   const now = new Date();
-  const month = Math.max(1, Math.min(12, Number(params.month) || now.getUTCMonth() + 1));
-  const year = Number(params.year) || now.getUTCFullYear();
+  const brazilDate = now.toLocaleDateString("en-CA", { timeZone: "America/Sao_Paulo" });
+  const [defaultYear, defaultMonth] = brazilDate.split("-").map(Number);
+  const month = Math.max(1, Math.min(12, Number(params.month) || defaultMonth));
+  const year = Number(params.year) || defaultYear;
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
