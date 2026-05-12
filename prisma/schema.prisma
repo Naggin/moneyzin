@@ -38,3 +38,13 @@ model Transaction {
 
   @@index([userId])
 }
+
+model Budget {
+  id       String  @id @default(cuid())
+  userId   String
+  category String
+  amount   Decimal @db.Decimal(12, 2)
+
+  @@unique([userId, category])
+  @@index([userId])
+}

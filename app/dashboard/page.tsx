@@ -7,6 +7,7 @@ import CategoryChart from "../components/CategoryChart";
 import TopExpensesChart from "../components/TopExpensesChart";
 import TopRevenuesChart from "../components/TopRevenuesChart";
 import MonthNavigator from "../components/MonthNavigator";
+import BudgetProgress from "../components/BudgetProgress";
 
 export default async function DashboardPage({
   searchParams,
@@ -27,7 +28,7 @@ export default async function DashboardPage({
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-  const [dbUser, incomeAgg, expenseAgg, transactions] = await Promise.all([
+  const [dbUser, incomeAgg, expenseAgg, transactions, budgetRows] = await Promise.all([
     prisma.user.upsert({
       where: { id: userId },
       update: {},
@@ -49,11 +50,22 @@ export default async function DashboardPage({
       where: { userId, date: { gte: startDate, lte: endDate } },
       orderBy: { date: "desc" },
     }),
+    prisma.budget.findMany({ where: { userId } }),
   ]);
 
   const totalIncomes = incomeAgg._sum.amount?.toNumber() ?? 0;
   const totalExpenses = expenseAgg._sum.amount?.toNumber() ?? 0;
   const balance = totalIncomes - totalExpenses;
+
+  const budgetItems = budgetRows
+    .map((b) => ({
+      category: b.category,
+      limit: b.amount.toNumber(),
+      spent: transactions
+        .filter((t) => t.type === "EXPENSE" && t.category === b.category)
+        .reduce((sum, t) => sum + t.amount.toNumber(), 0),
+    }))
+    .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
 
   // Decimal não é serializável via JSON — converte antes de passar para Client Components
   const serializedTransactions = transactions.map((t) => ({
@@ -80,6 +92,10 @@ export default async function DashboardPage({
       </div>
 
       <SummaryCards balance={balance} incomes={totalIncomes} expenses={totalExpenses} />
+
+      <div className="mt-6">
+        <BudgetProgress items={budgetItems} month={month} year={year} />
+      </div>
 
       {/* Grid Bento Moderno */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">

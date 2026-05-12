@@ -6,6 +6,7 @@ import DeleteButton from "../../components/DeleteButton";
 import AddTransactionModal from "../../components/AddTransactionModal";
 import MonthNavigator from "../../components/MonthNavigator";
 import ExportButtons from "../../components/ExportButtons";
+import TransactionFilters from "../../components/TransactionFilters";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS_PER_PAGE = 15;
@@ -46,11 +47,18 @@ export default async function TransactionsPage({
   const month = Math.max(1, Math.min(12, Number(params.month) || defaultMonth));
   const year = Number(params.year) || defaultYear;
   const currentPage = Math.max(1, Number(params.page) || 1);
+  const search = String(params.search ?? "").trim();
+  const category = String(params.category ?? "").trim();
 
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
-  const where = { userId, date: { gte: startDate, lte: endDate } };
+  const where = {
+    userId,
+    date: { gte: startDate, lte: endDate },
+    ...(search && { description: { contains: search, mode: "insensitive" as const } }),
+    ...(category && { category }),
+  };
 
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
@@ -92,6 +100,13 @@ export default async function TransactionsPage({
             {total === 0 ? "Nenhuma transação" : `${total} transaç${total === 1 ? "ão" : "ões"}`}
           </h2>
         </div>
+
+        <TransactionFilters
+          month={month}
+          year={year}
+          initialSearch={search}
+          initialCategory={category}
+        />
 
         <div className="divide-y divide-gray-50 dark:divide-gray-800 transition-colors">
           {transactions.length === 0 ? (

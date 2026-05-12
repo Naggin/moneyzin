@@ -47,3 +47,27 @@ export async function deleteTransaction(transactionId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/transactions");
 }
+
+export async function upsertBudget(formData: FormData) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Usuário não logado");
+
+  const category = String(formData.get("category") ?? "").trim();
+  const amount = parseFloat(String(formData.get("amount") ?? "0"));
+
+  if (!category) throw new Error("Categoria inválida");
+  if (isNaN(amount) || amount < 0) throw new Error("Valor inválido");
+
+  if (amount === 0) {
+    await prisma.budget.deleteMany({ where: { userId, category } });
+  } else {
+    await prisma.budget.upsert({
+      where: { userId_category: { userId, category } },
+      create: { userId, category, amount },
+      update: { amount },
+    });
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/dashboard/settings");
+}
