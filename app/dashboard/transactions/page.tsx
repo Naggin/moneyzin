@@ -5,6 +5,7 @@ import Link from "next/link";
 import DeleteButton from "../../components/DeleteButton";
 import AddTransactionModal from "../../components/AddTransactionModal";
 import MonthNavigator from "../../components/MonthNavigator";
+import ExportButtons from "../../components/ExportButtons";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS_PER_PAGE = 15;
@@ -77,7 +78,8 @@ export default async function TransactionsPage({
             {MONTHS[month - 1]} {year}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <ExportButtons month={month} year={year} />
           <MonthNavigator month={month} year={year} />
           <AddTransactionModal />
         </div>
