@@ -6,11 +6,24 @@ import SummaryCards from "../components/SummaryCards";
 import CategoryChart from "../components/CategoryChart";
 import TopExpensesChart from "../components/TopExpensesChart";
 import TopRevenuesChart from "../components/TopRevenuesChart";
+import MonthNavigator from "../components/MonthNavigator";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const [{ userId }, user] = await Promise.all([auth(), currentUser()]);
 
   if (!userId || !user) redirect("/sign-in");
+
+  const params = await searchParams;
+  const now = new Date();
+  const month = Math.max(1, Math.min(12, Number(params.month) || now.getUTCMonth() + 1));
+  const year = Number(params.year) || now.getUTCFullYear();
+
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
 
   const [dbUser, incomeAgg, expenseAgg, transactions] = await Promise.all([
     prisma.user.upsert({
@@ -23,15 +36,15 @@ export default async function DashboardPage() {
       },
     }),
     prisma.transaction.aggregate({
-      where: { userId, type: "INCOME" },
+      where: { userId, type: "INCOME", date: { gte: startDate, lte: endDate } },
       _sum: { amount: true },
     }),
     prisma.transaction.aggregate({
-      where: { userId, type: "EXPENSE" },
+      where: { userId, type: "EXPENSE", date: { gte: startDate, lte: endDate } },
       _sum: { amount: true },
     }),
     prisma.transaction.findMany({
-      where: { userId },
+      where: { userId, date: { gte: startDate, lte: endDate } },
       orderBy: { date: "desc" },
     }),
   ]);
@@ -54,11 +67,14 @@ export default async function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 tracking-tight transition-colors">
-            Olá, {dbUser.name?.split(" ")[0]}! 👋
+            Olá, {dbUser.name?.split(" ")[0]}!
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1 transition-colors">Sua central de inteligência financeira.</p>
         </div>
-        <AddTransactionModal />
+        <div className="flex items-center gap-3">
+          <MonthNavigator month={month} year={year} />
+          <AddTransactionModal />
+        </div>
       </div>
 
       <SummaryCards balance={balance} incomes={totalIncomes} expenses={totalExpenses} />

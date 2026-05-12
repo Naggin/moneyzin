@@ -81,10 +81,20 @@ export default async function TransactionsPage({
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <p className={`font-semibold transition-colors ${t.type === "INCOME" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                     {t.type === "INCOME" ? "+" : "-"} {formatCurrency(t.amount.toNumber())}
                   </p>
+                  <AddTransactionModal
+                    transaction={{
+                      id: t.id,
+                      description: t.description,
+                      amount: t.amount.toNumber(),
+                      type: t.type,
+                      category: t.category,
+                      date: t.date.toISOString(),
+                    }}
+                  />
                   <DeleteButton transactionId={t.id} />
                 </div>
               </div>
@@ -99,10 +109,7 @@ export default async function TransactionsPage({
             </p>
             <div className="flex items-center gap-2">
               {safePage > 1 ? (
-                <Link
-                  href={`?page=${safePage - 1}`}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
+                <Link href={`?page=${safePage - 1}`} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
                   <ChevronLeft size={16} /> Anterior
                 </Link>
               ) : (
@@ -111,10 +118,7 @@ export default async function TransactionsPage({
                 </span>
               )}
               {safePage < totalPages ? (
-                <Link
-                  href={`?page=${safePage + 1}`}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
+                <Link href={`?page=${safePage + 1}`} className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
                   Próxima <ChevronRight size={16} />
                 </Link>
               ) : (
