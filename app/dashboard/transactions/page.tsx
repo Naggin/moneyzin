@@ -78,7 +78,7 @@ export default async function TransactionsPage() {
                 <div className="flex items-center gap-4">
                   {/* Cores de positivo/negativo continuam, mas adaptadas se precisar */}
                   <p className={`font-semibold transition-colors ${t.type === 'INCOME' ? 'text-emerald-500 dark:text-emerald-400' : 'text-red-500 dark:text-red-400'}`}>
-                    {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount)}
+                    {t.type === 'INCOME' ? '+' : '-'} {formatCurrency(t.amount.toNumber())}
                   </p>
                   
                   <DeleteButton transactionId={t.id} />

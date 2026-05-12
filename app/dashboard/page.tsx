@@ -29,17 +29,24 @@ export default async function DashboardPage() {
 
   const totalIncomes = transactions
     .filter((t) => t.type === "INCOME")
-    .reduce((acc, t) => acc + t.amount, 0);
+    .reduce((acc, t) => acc + t.amount.toNumber(), 0);
 
   const totalExpenses = transactions
     .filter((t) => t.type === "EXPENSE")
-    .reduce((acc, t) => acc + t.amount, 0);
+    .reduce((acc, t) => acc + t.amount.toNumber(), 0);
 
   const balance = totalIncomes - totalExpenses;
 
+  // Decimal não é serializável via JSON — converte antes de passar para Client Components
+  const serializedTransactions = transactions.map((t) => ({
+    ...t,
+    amount: t.amount.toNumber(),
+    date: t.date.toISOString(),
+  }));
+
   return (
     <div className="p-8 pb-24 md:pb-8 max-w-7xl mx-auto transition-colors duration-300">
-      
+
       {/* Cabeçalho */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
@@ -55,19 +62,19 @@ export default async function DashboardPage() {
 
       {/* Grid Bento Moderno */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-8">
-        
+
         {/* Bloco 1: Gráfico de Pizza */}
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 flex flex-col transition-colors duration-300">
           <div className="mb-6">
             <h2 className="font-bold text-gray-800 dark:text-gray-100">Despesas por Categoria</h2>
             <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Distribuição do seu orçamento</p>
           </div>
-          <CategoryChart transactions={transactions} />
+          <CategoryChart transactions={serializedTransactions} />
         </div>
 
         {/* Bloco 2 e 3 */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-          
+
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 transition-colors duration-300">
             <div className="mb-6 flex justify-between items-center">
               <div>
@@ -78,7 +85,7 @@ export default async function DashboardPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
               </div>
             </div>
-            <TopExpensesChart transactions={transactions} />
+            <TopExpensesChart transactions={serializedTransactions} />
           </div>
 
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 transition-colors duration-300">
@@ -91,7 +98,7 @@ export default async function DashboardPage() {
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="m17 5-5-3-5 3"/><path d="m17 19-5 3-5-3"/><path d="M2 12h20"/><path d="m5 7-3 5 3 5"/><path d="m19 7 3 5-3 5"/></svg>
               </div>
             </div>
-            <TopRevenuesChart transactions={transactions} />
+            <TopRevenuesChart transactions={serializedTransactions} />
           </div>
 
         </div>

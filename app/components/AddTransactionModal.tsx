@@ -18,8 +18,7 @@ export default function AddTransactionModal() {
       // Toca o aviso verdinho de sucesso!
       toast.success("Transação salva com sucesso!");
     } catch (error) {
-      // Toca o aviso vermelhinho de erro caso falhe!
-      toast.error("Ops! Algo deu errado ao salvar.");
+      toast.error(error instanceof Error ? error.message : "Ops! Algo deu errado ao salvar.");
       console.error(error);
     }
   }

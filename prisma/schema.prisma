@@ -12,23 +12,27 @@ datasource db {
 // Nossas Tabelas (Models)
 // ----------------------------------------------------
 
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
 model User {
   id           String        @id @default(uuid())
   email        String        @unique
   name         String?
-  transactions Transaction[] 
+  transactions Transaction[]
   createdAt    DateTime      @default(now())
 }
 
 model Transaction {
-  id          String   @id @default(uuid())
+  id          String          @id @default(uuid())
   description String
-  amount      Float
-  type        String   // "INCOME" ou "EXPENSE"
-  category    String   @default("Outros")
-  date        DateTime @default(now())
-  
-  // Relacionamentos (Conexões entre as tabelas)
+  amount      Decimal         @db.Decimal(12, 2)
+  type        TransactionType
+  category    String          @default("Outros")
+  date        DateTime        @default(now())
+
   userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  user        User            @relation(fields: [userId], references: [id])
 }
