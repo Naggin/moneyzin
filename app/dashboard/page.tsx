@@ -8,33 +8,36 @@ import TopExpensesChart from "../components/TopExpensesChart";
 import TopRevenuesChart from "../components/TopRevenuesChart";
 
 export default async function DashboardPage() {
-  const { userId } = await auth();
-  const user = await currentUser();
+  const [{ userId }, user] = await Promise.all([auth(), currentUser()]);
 
   if (!userId || !user) redirect("/sign-in");
 
-  const dbUser = await prisma.user.upsert({
-    where: { id: userId },
-    update: {},
-    create: {
-      id: userId,
-      email: user.emailAddresses[0].emailAddress,
-      name: user.firstName || "Usuário",
-    },
-  });
+  const [dbUser, incomeAgg, expenseAgg, transactions] = await Promise.all([
+    prisma.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: {
+        id: userId,
+        email: user.emailAddresses[0].emailAddress,
+        name: user.firstName || "Usuário",
+      },
+    }),
+    prisma.transaction.aggregate({
+      where: { userId, type: "INCOME" },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: { userId, type: "EXPENSE" },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.findMany({
+      where: { userId },
+      orderBy: { date: "desc" },
+    }),
+  ]);
 
-  const transactions = await prisma.transaction.findMany({
-    where: { userId },
-  });
-
-  const totalIncomes = transactions
-    .filter((t) => t.type === "INCOME")
-    .reduce((acc, t) => acc + t.amount.toNumber(), 0);
-
-  const totalExpenses = transactions
-    .filter((t) => t.type === "EXPENSE")
-    .reduce((acc, t) => acc + t.amount.toNumber(), 0);
-
+  const totalIncomes = incomeAgg._sum.amount?.toNumber() ?? 0;
+  const totalExpenses = expenseAgg._sum.amount?.toNumber() ?? 0;
   const balance = totalIncomes - totalExpenses;
 
   // Decimal não é serializável via JSON — converte antes de passar para Client Components
