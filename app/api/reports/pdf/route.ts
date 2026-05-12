@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
   const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.pdf`;
 
-  return new NextResponse(buffer, {
+  return new Response(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${filename}"`,
