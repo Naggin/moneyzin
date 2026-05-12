@@ -5,7 +5,6 @@ import { LayoutDashboard, ArrowRightLeft, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { VisibilityProvider } from "../contexts/VisibilityContext";
-import ThemeToggle from "../components/ThemeToggle";
 
 export default function DashboardLayout({
   children,
@@ -39,8 +38,6 @@ export default function DashboardLayout({
               <Settings size={20} />
               Configurações
             </Link>
-
-            <ThemeToggle />
           </nav>
 
           <div className="p-4 border-t border-gray-100 dark:border-gray-800 m-4 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center transition-colors">
@@ -65,7 +62,10 @@ export default function DashboardLayout({
             <span className="text-[10px] font-medium">Transações</span>
           </Link>
 
-          <ThemeToggle />
+          <Link href="/dashboard/settings" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname === "/dashboard/settings" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
+            <Settings size={20} />
+            <span className="text-[10px] font-medium">Config.</span>
+          </Link>
 
           <div className="flex flex-col items-center gap-1 p-2 mt-1">
               <UserButton />
