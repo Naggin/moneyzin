@@ -5,5 +5,5 @@ export const transactionSchema = z.object({
   amount: z.coerce.number().positive("O valor deve ser maior que zero"),
   type: z.enum(["INCOME", "EXPENSE"]),
   category: z.string().min(1, "Selecione uma categoria"),
-  date: z.coerce.date({ invalid_type_error: "Data inválida" }),
+  date: z.coerce.date({ error: "Data inválida" }),
 });
