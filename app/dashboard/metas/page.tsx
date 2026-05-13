@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import prisma from "../../../lib/prisma";
+import prisma from "../../lib/prisma";
 import { redirect } from "next/navigation";
-import BudgetSettings from "../../../components/BudgetSettings";
-import BudgetProgress from "../../../components/BudgetProgress";
-import MonthNavigator from "../../../components/MonthNavigator";
+import BudgetSettings from "../../components/BudgetSettings";
+import BudgetProgress from "../../components/BudgetProgress";
+import MonthNavigator from "../../components/MonthNavigator";
 
 export default async function MetasPage({
   searchParams,
