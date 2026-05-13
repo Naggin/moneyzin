@@ -9,6 +9,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -52,6 +54,14 @@ const WIDGET_SPAN: Record<WidgetId, string> = {
   monthlyEvolution: "col-span-1 lg:col-span-3",
 };
 
+const WIDGET_INFO: Record<WidgetId, { title: string; description: string }> = {
+  budgetProgress: { title: "Metas do mês", description: "Progresso por categoria" },
+  categoryChart: { title: "Despesas por Categoria", description: "Distribuição do seu orçamento" },
+  topExpenses: { title: "Maiores Despesas", description: "Para onde o dinheiro foi" },
+  topRevenues: { title: "Maiores Receitas", description: "De onde o dinheiro veio" },
+  monthlyEvolution: { title: "Evolução Mensal", description: "Receitas e despesas dos últimos 6 meses" },
+};
+
 function loadOrder(): WidgetId[] {
   if (typeof window === "undefined") return DEFAULT_ORDER;
   try {
@@ -66,17 +76,32 @@ function loadOrder(): WidgetId[] {
   return DEFAULT_ORDER;
 }
 
-function SortableWidget({ id, span, children }: { id: string; span: string; children: React.ReactNode }) {
+// Ghost card shown in DragOverlay — no recharts, no distortion
+function WidgetGhost({ id }: { id: WidgetId }) {
+  const { title, description } = WIDGET_INFO[id];
+  return (
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-emerald-400 dark:border-emerald-500 shadow-2xl p-6 cursor-grabbing rotate-1 opacity-95">
+      <h2 className="font-bold text-gray-800 dark:text-gray-100">{title}</h2>
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{description}</p>
+      <div className="mt-4 h-32 bg-gray-100 dark:bg-gray-800 rounded-xl animate-pulse" />
+    </div>
+  );
+}
+
+function SortableWidget({ id, span, isDraggingAny, children }: { id: string; span: string; isDraggingAny: boolean; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: isDraggingAny ? transition : undefined,
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={`relative group ${span}`}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`relative group ${span} ${isDragging ? "opacity-0" : ""}`}
+    >
       <div
         {...attributes}
         {...listeners}
@@ -92,13 +117,19 @@ function SortableWidget({ id, span, children }: { id: string; span: string; chil
 
 export default function DraggableDashboardGrid({ budgetItems, month, year, transactions, monthlyData }: Props) {
   const [order, setOrder] = useState<WidgetId[]>(loadOrder);
+  const [activeId, setActiveId] = useState<WidgetId | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  function handleDragStart(event: DragStartEvent) {
+    setActiveId(event.active.id as WidgetId);
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveId(null);
     const { active, over } = event;
     if (over && active.id !== over.id) {
       setOrder((prev) => {
@@ -171,16 +202,25 @@ export default function DraggableDashboardGrid({ budgetItems, month, year, trans
   }
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <SortableContext items={order} strategy={rectSortingStrategy}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
           {order.map((id) => (
-            <SortableWidget key={id} id={id} span={WIDGET_SPAN[id]}>
+            <SortableWidget key={id} id={id} span={WIDGET_SPAN[id]} isDraggingAny={activeId !== null}>
               {renderWidget(id)}
             </SortableWidget>
           ))}
         </div>
       </SortableContext>
+
+      <DragOverlay dropAnimation={{ duration: 150, easing: "ease" }}>
+        {activeId ? <WidgetGhost id={activeId} /> : null}
+      </DragOverlay>
     </DndContext>
   );
 }

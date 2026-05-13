@@ -1,19 +1,13 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
-import prisma from "../../lib/prisma";
 import ThemeToggle from "../../components/ThemeToggle";
-import BudgetSettings from "../../components/BudgetSettings";
 
 export default async function SettingsPage() {
-  const [user, { userId }] = await Promise.all([currentUser(), auth()]);
-  if (!user || !userId) redirect("/sign-in");
+  const user = await currentUser();
+  if (!user) redirect("/sign-in");
 
   const email = user.emailAddresses[0]?.emailAddress ?? "";
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Usuário";
-
-  const budgetRows = await prisma.budget.findMany({ where: { userId } });
-  const budgets = Object.fromEntries(budgetRows.map((b) => [b.category, b.amount.toNumber()]));
 
   return (
     <div className="p-4 md:p-8 pb-24 md:pb-8 max-w-2xl mx-auto transition-colors duration-300">
@@ -40,9 +34,6 @@ export default async function SettingsPage() {
           </div>
         </div>
       </div>
-
-      {/* Metas */}
-      <BudgetSettings budgets={budgets} />
 
       {/* Aparência */}
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6 transition-colors duration-300">

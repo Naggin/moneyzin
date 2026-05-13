@@ -1,7 +1,7 @@
 "use client";
 
 import { UserButton } from "@clerk/nextjs";
-import { LayoutDashboard, ArrowRightLeft, Settings } from "lucide-react";
+import { LayoutDashboard, ArrowRightLeft, Target, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { VisibilityProvider } from "../contexts/VisibilityContext";
@@ -28,10 +28,15 @@ export default function DashboardLayout({
               <LayoutDashboard size={20} />
               Visão Geral
             </Link>
-            
+
             <Link href="/dashboard/transactions" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${pathname === "/dashboard/transactions" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
               <ArrowRightLeft size={20} />
               Transações
+            </Link>
+
+            <Link href="/dashboard/metas" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${pathname === "/dashboard/metas" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
+              <Target size={20} />
+              Metas
             </Link>
 
             <Link href="/dashboard/settings" className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${pathname === "/dashboard/settings" ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"}`}>
@@ -56,10 +61,15 @@ export default function DashboardLayout({
             <LayoutDashboard size={20} />
             <span className="text-[10px] font-medium">Início</span>
           </Link>
-          
+
           <Link href="/dashboard/transactions" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname === "/dashboard/transactions" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
             <ArrowRightLeft size={20} />
-            <span className="text-[10px] font-medium">Transações</span>
+            <span className="text-[10px] font-medium">Trans.</span>
+          </Link>
+
+          <Link href="/dashboard/metas" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname === "/dashboard/metas" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
+            <Target size={20} />
+            <span className="text-[10px] font-medium">Metas</span>
           </Link>
 
           <Link href="/dashboard/settings" className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-colors ${pathname === "/dashboard/settings" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"}`}>
