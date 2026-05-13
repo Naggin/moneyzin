@@ -9,8 +9,25 @@ import { ThemeProvider } from "./providers/ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Moneyzin",
-  description: "Sistema de controle financeiro minimalista",
+  metadataBase: new URL("https://moneyzin.vercel.app"),
+  title: {
+    default: "Moneyzin",
+    template: "%s | Moneyzin",
+  },
+  description: "Controle financeiro pessoal. Registre gastos, acompanhe receitas e visualize para onde vai seu dinheiro — tudo em um só lugar.",
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "https://moneyzin.vercel.app",
+    siteName: "Moneyzin",
+    title: "Moneyzin — Suas finanças, simplificadas.",
+    description: "Controle financeiro pessoal com dashboard, metas de orçamento e relatórios em PDF e Excel.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Moneyzin — Suas finanças, simplificadas.",
+    description: "Controle financeiro pessoal com dashboard, metas de orçamento e relatórios em PDF e Excel.",
+  },
 };
 
 export default function RootLayout({
