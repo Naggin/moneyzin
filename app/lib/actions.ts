@@ -2,7 +2,7 @@
 
 import prisma from "./prisma";
 import { auth } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, updateTag } from "next/cache";
 import { transactionSchema } from "./schemas";
 
 export async function createTransaction(formData: FormData) {
@@ -16,6 +16,7 @@ export async function createTransaction(formData: FormData) {
     data: { ...result.data, userId },
   });
 
+  updateTag("transactions");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/transactions");
 }
@@ -32,6 +33,7 @@ export async function updateTransaction(transactionId: string, formData: FormDat
     data: result.data,
   });
 
+  updateTag("transactions");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/transactions");
 }
@@ -44,6 +46,7 @@ export async function deleteTransaction(transactionId: string) {
     where: { id: transactionId, userId },
   });
 
+  updateTag("transactions");
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/transactions");
 }
@@ -68,6 +71,7 @@ export async function upsertBudget(formData: FormData) {
     });
   }
 
+  updateTag("budgets");
   revalidatePath("/dashboard");
-  revalidatePath("/dashboard/settings");
+  revalidatePath("/dashboard/metas");
 }

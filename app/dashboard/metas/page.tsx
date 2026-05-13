@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
-import prisma from "../../lib/prisma";
 import { redirect } from "next/navigation";
+import { getCachedBudgets, getCachedTransactions } from "../../lib/cached-queries";
 import BudgetSettings from "../../components/BudgetSettings";
 import BudgetProgress from "../../components/BudgetProgress";
 import MonthNavigator from "../../components/MonthNavigator";
@@ -20,14 +20,9 @@ export default async function MetasPage({
   const month = Math.max(1, Math.min(12, Number(params.month) || defaultMonth));
   const year = Number(params.year) || defaultYear;
 
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-
   const [budgetRows, transactions] = await Promise.all([
-    prisma.budget.findMany({ where: { userId } }),
-    prisma.transaction.findMany({
-      where: { userId, date: { gte: startDate, lte: endDate } },
-    }),
+    getCachedBudgets(userId),
+    getCachedTransactions(userId, year, month),
   ]);
 
   const budgets = Object.fromEntries(budgetRows.map((b) => [b.category, b.amount.toNumber()]));
@@ -38,7 +33,7 @@ export default async function MetasPage({
       limit: b.amount.toNumber(),
       spent: transactions
         .filter((t) => t.type === "EXPENSE" && t.category === b.category)
-        .reduce((sum, t) => sum + t.amount.toNumber(), 0),
+        .reduce((sum: number, t) => sum + t.amount.toNumber(), 0),
     }))
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
 

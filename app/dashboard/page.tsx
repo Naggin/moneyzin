@@ -5,15 +5,21 @@ import AddTransactionModal from "../components/AddTransactionModal";
 import SummaryCards from "../components/SummaryCards";
 import MonthNavigator from "../components/MonthNavigator";
 import DraggableDashboardGrid from "../components/DraggableDashboardGrid";
+import {
+  getCachedBudgets,
+  getCachedTransactions,
+  getCachedIncomeAgg,
+  getCachedExpenseAgg,
+  getCachedEvolutionTxs,
+} from "../lib/cached-queries";
 
 export default async function DashboardPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const [{ userId }, user] = await Promise.all([auth(), currentUser()]);
-
-  if (!userId || !user) redirect("/sign-in");
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
 
   const params = await searchParams;
   const now = new Date();
@@ -22,38 +28,26 @@ export default async function DashboardPage({
   const month = Math.max(1, Math.min(12, Number(params.month) || defaultMonth));
   const year = Number(params.year) || defaultYear;
 
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
-
-  const evolutionStart = new Date(Date.UTC(year, month - 6, 1));
-
-  const [dbUser, incomeAgg, expenseAgg, transactions, budgetRows, evolutionTxs] = await Promise.all([
-    prisma.user.upsert({
-      where: { id: userId },
-      update: {},
-      create: {
+  // Busca o usuário no banco — só chama a API do Clerk na primeira visita
+  let dbUser = await prisma.user.findUnique({ where: { id: userId } });
+  if (!dbUser) {
+    const clerkUser = await currentUser();
+    if (!clerkUser) redirect("/sign-in");
+    dbUser = await prisma.user.create({
+      data: {
         id: userId,
-        email: user.emailAddresses[0].emailAddress,
-        name: user.firstName || "Usuário",
+        email: clerkUser.emailAddresses[0].emailAddress,
+        name: clerkUser.firstName || "Usuário",
       },
-    }),
-    prisma.transaction.aggregate({
-      where: { userId, type: "INCOME", date: { gte: startDate, lte: endDate } },
-      _sum: { amount: true },
-    }),
-    prisma.transaction.aggregate({
-      where: { userId, type: "EXPENSE", date: { gte: startDate, lte: endDate } },
-      _sum: { amount: true },
-    }),
-    prisma.transaction.findMany({
-      where: { userId, date: { gte: startDate, lte: endDate } },
-      orderBy: { date: "desc" },
-    }),
-    prisma.budget.findMany({ where: { userId } }),
-    prisma.transaction.findMany({
-      where: { userId, date: { gte: evolutionStart, lte: endDate } },
-      select: { date: true, type: true, amount: true },
-    }),
+    });
+  }
+
+  const [incomeAgg, expenseAgg, transactions, budgetRows, evolutionTxs] = await Promise.all([
+    getCachedIncomeAgg(userId, year, month),
+    getCachedExpenseAgg(userId, year, month),
+    getCachedTransactions(userId, year, month),
+    getCachedBudgets(userId),
+    getCachedEvolutionTxs(userId, year, month),
   ]);
 
   const totalIncomes = incomeAgg._sum.amount?.toNumber() ?? 0;
