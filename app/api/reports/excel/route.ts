@@ -4,6 +4,7 @@ import prisma from "@/app/lib/prisma";
 import * as XLSX from "xlsx";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const MONTHS = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -75,14 +76,21 @@ export async function GET(req: NextRequest) {
   wsSummary["!cols"] = [{ wch: 22 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(wb, wsSummary, "Resumo");
 
-  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+  try {
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.xlsx`;
 
-  const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.xlsx`;
-
-  return new Response(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
+    return new Response(new Uint8Array(buffer), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } catch (err) {
+    console.error("[Excel] Erro ao gerar relatório:", err);
+    return NextResponse.json(
+      { error: "Falha ao gerar Excel", detail: String(err) },
+      { status: 500 }
+    );
+  }
 }

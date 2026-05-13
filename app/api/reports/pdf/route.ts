@@ -6,6 +6,7 @@ import { createElement, type ReactElement } from "react";
 import PDFDocument from "@/app/components/PDFDocument";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 const MONTHS = [
   "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
@@ -49,22 +50,29 @@ export async function GET(req: NextRequest) {
     date: t.date.toISOString(),
   }));
 
-  const document = createElement(PDFDocument, {
-    transactions: transactionData,
-    month,
-    year,
-    totalIncome,
-    totalExpense,
-  });
+  try {
+    const document = createElement(PDFDocument, {
+      transactions: transactionData,
+      month,
+      year,
+      totalIncome,
+      totalExpense,
+    });
 
-  const buffer = await renderToBuffer(document as ReactElement<DocumentProps>);
+    const buffer = await renderToBuffer(document as ReactElement<DocumentProps>);
+    const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.pdf`;
 
-  const filename = `moneyzin-${MONTHS[month - 1].toLowerCase()}-${year}.pdf`;
-
-  return new Response(new Uint8Array(buffer), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${filename}"`,
-    },
-  });
+    return new Response(new Uint8Array(buffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${filename}"`,
+      },
+    });
+  } catch (err) {
+    console.error("[PDF] Erro ao gerar relatório:", err);
+    return NextResponse.json(
+      { error: "Falha ao gerar PDF", detail: String(err) },
+      { status: 500 }
+    );
+  }
 }
