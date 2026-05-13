@@ -75,17 +75,17 @@ export default async function DashboardPage({
   }));
 
   return (
-    <div className="p-8 pb-24 md:pb-8 max-w-7xl mx-auto transition-colors duration-300">
+    <div className="p-4 md:p-8 pb-24 md:pb-8 max-w-7xl mx-auto transition-colors duration-300">
 
       {/* Cabeçalho */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 tracking-tight transition-colors">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 tracking-tight transition-colors">
             Olá, {dbUser.name?.split(" ")[0]}!
           </h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1 transition-colors">Sua central de inteligência financeira.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <MonthNavigator month={month} year={year} />
           <AddTransactionModal />
         </div>

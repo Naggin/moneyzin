@@ -77,16 +77,16 @@ export default async function TransactionsPage({
     `?month=${month}&year=${year}&page=${page}`;
 
   return (
-    <div className="p-8 pb-24 md:pb-8 transition-colors duration-300">
+    <div className="p-4 md:p-8 pb-24 md:pb-8 transition-colors duration-300">
 
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors">Transações</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100 transition-colors">Transações</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1 transition-colors">
             {MONTHS[month - 1]} {year}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <ExportButtons month={month} year={year} />
           <MonthNavigator month={month} year={year} />
           <AddTransactionModal />
@@ -115,34 +115,40 @@ export default async function TransactionsPage({
             </p>
           ) : (
             transactions.map((t) => (
-              <div key={t.id} className="p-4 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <p className="font-medium text-gray-800 dark:text-gray-100 transition-colors">{t.description}</p>
-                    <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold tracking-wide uppercase transition-colors ${getCategoryStyles(t.category)}`}>
-                      {t.category}
-                    </span>
+              <div key={t.id} className="p-3 sm:p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                <div className="flex justify-between items-start gap-2">
+                  {/* Esquerda */}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-800 dark:text-gray-100 transition-colors truncate">
+                      {t.description}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 transition-colors">
+                        {new Date(t.date).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
+                      </p>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide uppercase transition-colors ${getCategoryStyles(t.category)}`}>
+                        {t.category}
+                      </span>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 transition-colors">
-                    {new Date(t.date).toLocaleDateString("pt-BR", { timeZone: "UTC" })}
-                  </p>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <p className={`font-semibold transition-colors ${t.type === "INCOME" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
-                    {t.type === "INCOME" ? "+" : "-"} {formatCurrency(t.amount.toNumber())}
-                  </p>
-                  <AddTransactionModal
-                    transaction={{
-                      id: t.id,
-                      description: t.description,
-                      amount: t.amount.toNumber(),
-                      type: t.type,
-                      category: t.category,
-                      date: t.date.toISOString(),
-                    }}
-                  />
-                  <DeleteButton transactionId={t.id} />
+                  {/* Direita */}
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <p className={`text-sm sm:text-base font-semibold transition-colors whitespace-nowrap ${t.type === "INCOME" ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                      {t.type === "INCOME" ? "+" : "-"} {formatCurrency(t.amount.toNumber())}
+                    </p>
+                    <AddTransactionModal
+                      transaction={{
+                        id: t.id,
+                        description: t.description,
+                        amount: t.amount.toNumber(),
+                        type: t.type,
+                        category: t.category,
+                        date: t.date.toISOString(),
+                      }}
+                    />
+                    <DeleteButton transactionId={t.id} />
+                  </div>
                 </div>
               </div>
             ))

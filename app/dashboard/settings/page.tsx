@@ -16,10 +16,10 @@ export default async function SettingsPage() {
   const budgets = Object.fromEntries(budgetRows.map((b) => [b.category, b.amount.toNumber()]));
 
   return (
-    <div className="p-8 pb-24 md:pb-8 max-w-2xl mx-auto transition-colors duration-300">
+    <div className="p-4 md:p-8 pb-24 md:pb-8 max-w-2xl mx-auto transition-colors duration-300">
 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Configurações</h1>
+      <div className="mb-6 md:mb-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-100">Configurações</h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">Gerencie sua conta e preferências.</p>
       </div>
 

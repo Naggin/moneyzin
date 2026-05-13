@@ -78,16 +78,16 @@ export default function LandingPage() {
 
       <main>
         {/* Hero */}
-        <section className="pt-32 pb-20 px-6">
+        <section className="pt-28 pb-16 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto text-center">
             <span className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full mb-6 tracking-wide uppercase">
               ✦ Controle financeiro pessoal
             </span>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 dark:text-white leading-tight tracking-tight mb-6">
               Suas finanças,{" "}
               <span className="text-emerald-500">simplificadas.</span>
             </h1>
-            <p className="text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-10 leading-relaxed">
+            <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-xl mx-auto mb-8 sm:mb-10 leading-relaxed">
               Registre gastos, acompanhe receitas e visualize para onde vai seu dinheiro — tudo em um só lugar, de forma rápida e visual.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -108,12 +108,12 @@ export default function LandingPage() {
         </section>
 
         {/* Dashboard preview */}
-        <section className="px-6 pb-24">
+        <section className="px-4 sm:px-6 pb-20">
           <div className="max-w-5xl mx-auto">
-            <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
+            <div className="bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 p-4 sm:p-6 shadow-2xl shadow-gray-200/50 dark:shadow-black/30">
 
               {/* Fake top bar */}
-              <div className="flex items-center gap-2 mb-5">
+              <div className="hidden sm:flex items-center gap-2 mb-5">
                 <div className="w-3 h-3 rounded-full bg-red-400" />
                 <div className="w-3 h-3 rounded-full bg-yellow-400" />
                 <div className="w-3 h-3 rounded-full bg-green-400" />
@@ -123,28 +123,28 @@ export default function LandingPage() {
               </div>
 
               {/* Summary cards */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
                 {[
-                  { label: "Saldo", value: "R$ 1.800,00", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
-                  { label: "Receitas", value: "R$ 5.000,00", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
-                  { label: "Despesas", value: "R$ 3.200,00", icon: TrendingDown, color: "text-red-500", bg: "bg-red-50 dark:bg-red-500/10" },
+                  { label: "Saldo", value: "R$ 1.800", icon: Wallet, color: "text-emerald-500", bg: "bg-emerald-50 dark:bg-emerald-500/10" },
+                  { label: "Receitas", value: "R$ 5.000", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50 dark:bg-blue-500/10" },
+                  { label: "Despesas", value: "R$ 3.200", icon: TrendingDown, color: "text-red-500", bg: "bg-red-50 dark:bg-red-500/10" },
                 ].map((card) => (
-                  <div key={card.label} className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">{card.label}</span>
-                      <span className={`p-1.5 rounded-lg ${card.bg}`}>
-                        <card.icon size={14} className={card.color} />
+                  <div key={card.label} className="bg-white dark:bg-gray-950 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 p-2.5 sm:p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 font-medium">{card.label}</span>
+                      <span className={`p-1 sm:p-1.5 rounded-lg ${card.bg}`}>
+                        <card.icon size={12} className={card.color} />
                       </span>
                     </div>
-                    <p className="text-base font-bold text-gray-800 dark:text-gray-100">{card.value}</p>
-                    <p className="text-[10px] text-gray-400 dark:text-gray-600 mt-1">Maio 2026</p>
+                    <p className="text-xs sm:text-base font-bold text-gray-800 dark:text-gray-100 truncate">{card.value}</p>
+                    <p className="text-[9px] sm:text-[10px] text-gray-400 dark:text-gray-600 mt-0.5">Mai 2026</p>
                   </div>
                 ))}
               </div>
 
               {/* Budget progress bars */}
-              <div className="bg-white dark:bg-gray-950 rounded-2xl border border-gray-100 dark:border-gray-800 p-4">
-                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-3">Metas do mês</p>
+              <div className="bg-white dark:bg-gray-950 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 p-3 sm:p-4">
+                <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">Metas do mês</p>
                 <div className="space-y-2.5">
                   {[
                     { label: "Alimentação", pct: 64, spent: "R$ 320", limit: "R$ 500", color: "bg-emerald-500" },
@@ -168,7 +168,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features */}
-        <section className="px-6 pb-24 bg-gray-50 dark:bg-gray-900/50 py-20">
+        <section className="px-4 sm:px-6 pb-20 bg-gray-50 dark:bg-gray-900/50 py-16 sm:py-20">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-14">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
@@ -196,7 +196,7 @@ export default function LandingPage() {
         </section>
 
         {/* CTA final */}
-        <section className="px-6 py-24">
+        <section className="px-4 sm:px-6 py-16 sm:py-24">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Comece a controlar seu dinheiro hoje
