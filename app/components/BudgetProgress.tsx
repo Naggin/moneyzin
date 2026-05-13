@@ -32,7 +32,7 @@ export default function BudgetProgress({ items, month, year }: Props) {
         </div>
         <p className="text-sm text-gray-400 dark:text-gray-500 mt-3">
           Nenhuma meta definida.{" "}
-          <Link href="/dashboard/settings" className="text-emerald-500 hover:underline">
+          <Link href="/dashboard/metas" className="text-emerald-500 hover:underline">
             Configurar metas
           </Link>
         </p>
@@ -53,7 +53,7 @@ export default function BudgetProgress({ items, month, year }: Props) {
           </div>
         </div>
         <Link
-          href="/dashboard/settings"
+          href="/dashboard/metas"
           className="text-xs text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors"
         >
           Editar metas
