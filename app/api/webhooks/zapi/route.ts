@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
 import prisma from "@/app/lib/prisma";
 import { CATEGORIES, type Category } from "@/app/lib/schemas";
 
@@ -8,24 +9,18 @@ const OWNER_USER_ID = process.env.OWNER_USER_ID;
 const ZAPI_INSTANCE_ID = process.env.ZAPI_INSTANCE_ID;
 const ZAPI_TOKEN = process.env.ZAPI_TOKEN;
 
-// Keywords para detectar RECEITA
-const INCOME_KEYWORDS = [
-  "recebi", "recebei", "salário", "salario", "renda",
-  "ganhei", "ganho", "entrada", "pix recebido", "freelance",
-];
+const anthropic = new Anthropic();
 
-// Keywords por categoria para auto-detecção
-const CATEGORY_KEYWORDS: Record<Category, string[]> = {
-  Alimentação: ["mercado", "supermercado", "restaurante", "lanche", "comida",
-    "almoço", "jantar", "café", "padaria", "ifood", "delivery", "pizza"],
-  Transporte: ["uber", "taxi", "táxi", "ônibus", "metrô", "combustível",
-    "gasolina", "estacionamento", "99", "cabify"],
-  Moradia: ["aluguel", "condomínio", "luz", "água", "internet", "gás", "iptu"],
-  Salário: ["salário", "salario", "pagamento"],
-  Lazer: ["cinema", "netflix", "spotify", "show", "teatro", "viagem",
-    "hotel", "bar", "game", "jogo"],
-  Outros: [],
-};
+const SYSTEM_PROMPT =
+  `Você é um assistente de controle financeiro pessoal. ` +
+  `Analise a mensagem do usuário e extraia informações de uma transação financeira.\n\n` +
+  `Categorias disponíveis: ${CATEGORIES.join(", ")}\n\n` +
+  `Regras:\n` +
+  `- Se a mensagem mencionar recebimento (recebi, salário, renda, ganho, freelance, entrada), o tipo é INCOME\n` +
+  `- Caso contrário, o tipo é EXPENSE\n` +
+  `- Escolha a categoria mais adequada ao contexto da mensagem\n` +
+  `- A descrição deve ser limpa, sem verbos como "gastei", "recebi", "paguei", "comprei"\n` +
+  `- Se não houver valor monetário válido, use amount=0`;
 
 const HELP_MESSAGE =
   `💡 *Como registrar uma transação:*\n\n` +
@@ -45,50 +40,76 @@ interface ParsedTransaction {
   category: Category;
 }
 
-function parseMessage(text: string): ParsedTransaction | null {
-  const lower = text.toLowerCase().trim();
+async function parseMessageWithClaude(text: string): Promise<ParsedTransaction | null> {
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 256,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+      tools: [
+        {
+          name: "register_transaction",
+          description:
+            "Registra uma transação financeira extraída da mensagem. " +
+            "Use amount=0 se a mensagem não contiver uma transação válida.",
+          input_schema: {
+            type: "object" as const,
+            properties: {
+              amount: {
+                type: "number",
+                description: "Valor em reais. Use 0 se não houver transação válida.",
+              },
+              description: {
+                type: "string",
+                description: "Descrição limpa da transação, sem verbos de ação.",
+              },
+              type: {
+                type: "string",
+                enum: ["INCOME", "EXPENSE"],
+                description: "INCOME para receitas, EXPENSE para despesas.",
+              },
+              category: {
+                type: "string",
+                enum: Array.from(CATEGORIES),
+                description: "Categoria mais adequada.",
+              },
+            },
+            required: ["amount", "description", "type", "category"],
+          },
+        },
+      ],
+      tool_choice: { type: "tool", name: "register_transaction" },
+      messages: [{ role: "user", content: text }],
+    });
 
-  // Extrai o valor monetário (ex: "50", "50.00", "50,00", "R$ 50")
-  const amountMatch = lower.match(/r?\$?\s*(\d+(?:[.,]\d{1,2})?)/);
-  if (!amountMatch) return null;
+    const toolUse = response.content.find((block) => block.type === "tool_use");
+    if (!toolUse || toolUse.type !== "tool_use") return null;
 
-  const amount = parseFloat(amountMatch[1].replace(",", "."));
-  if (isNaN(amount) || amount <= 0) return null;
+    const input = toolUse.input as {
+      amount: number;
+      description: string;
+      type: "INCOME" | "EXPENSE";
+      category: Category;
+    };
 
-  const type: "INCOME" | "EXPENSE" =
-    INCOME_KEYWORDS.some((kw) => lower.includes(kw)) ? "INCOME" : "EXPENSE";
+    if (!input.amount || input.amount <= 0) return null;
 
-  // Remove valor e verbos comuns para obter a descrição
-  let description = text
-    .replace(/r?\$?\s*\d+(?:[.,]\d{1,2})?/i, "")
-    .replace(/\b(recebi|recebei|gastei|paguei|comprei)\b/gi, "")
-    .trim();
-
-  // Detecta categoria: primeiro verifica menção explícita, depois por keywords
-  let category: Category = "Outros";
-
-  for (const cat of CATEGORIES) {
-    if (lower.includes(cat.toLowerCase())) {
-      category = cat;
-      description = description
-        .replace(new RegExp(cat, "gi"), "")
-        .trim();
-      break;
-    }
+    return {
+      amount: input.amount,
+      description: input.description || "Lançamento via WhatsApp",
+      type: input.type,
+      category: input.category,
+    };
+  } catch (error) {
+    console.error("Erro ao processar mensagem com Claude:", error);
+    return null;
   }
-
-  if (category === "Outros") {
-    for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS) as [Category, string[]][]) {
-      if (keywords.some((kw) => lower.includes(kw))) {
-        category = cat;
-        break;
-      }
-    }
-  }
-
-  if (!description) description = "Lançamento via WhatsApp";
-
-  return { amount, description, type, category };
 }
 
 async function sendMessage(phone: string, message: string) {
@@ -109,7 +130,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Misconfigured" }, { status: 500 });
   }
 
-  // Valida o token secreto na URL (?token=...)
   const token = req.nextUrl.searchParams.get("token");
   if (token !== WEBHOOK_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -117,12 +137,10 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json();
 
-  // Ignora mensagens enviadas pelo próprio bot ou de grupos
   if (body.fromMe || body.isGroup) {
     return NextResponse.json({ ok: true });
   }
 
-  // Só processa mensagens do dono do app
   const senderPhone = (body.phone ?? "").replace("@c.us", "").replace(/\D/g, "");
   const ownerPhone = OWNER_WHATSAPP.replace(/\D/g, "");
   if (senderPhone !== ownerPhone) {
@@ -132,13 +150,12 @@ export async function POST(req: NextRequest) {
   const messageText: string = body.text?.message ?? "";
   if (!messageText) return NextResponse.json({ ok: true });
 
-  // Comando de ajuda
   if (/^(ajuda|help|\?)$/i.test(messageText.trim())) {
     await sendMessage(senderPhone, HELP_MESSAGE);
     return NextResponse.json({ ok: true });
   }
 
-  const parsed = parseMessage(messageText);
+  const parsed = await parseMessageWithClaude(messageText);
 
   if (!parsed) {
     await sendMessage(

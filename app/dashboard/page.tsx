@@ -50,25 +50,19 @@ export default async function DashboardPage({
     getCachedEvolutionTxs(userId, year, month),
   ]);
 
-  const totalIncomes = incomeAgg._sum.amount?.toNumber() ?? 0;
-  const totalExpenses = expenseAgg._sum.amount?.toNumber() ?? 0;
+  const totalIncomes = incomeAgg._sum.amount ?? 0;
+  const totalExpenses = expenseAgg._sum.amount ?? 0;
   const balance = totalIncomes - totalExpenses;
 
   const budgetItems = budgetRows
     .map((b) => ({
       category: b.category,
-      limit: b.amount.toNumber(),
+      limit: b.amount,
       spent: transactions
         .filter((t) => t.type === "EXPENSE" && t.category === b.category)
-        .reduce((sum, t) => sum + t.amount.toNumber(), 0),
+        .reduce((sum, t) => sum + t.amount, 0),
     }))
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
-
-  const serializedTransactions = transactions.map((t) => ({
-    ...t,
-    amount: t.amount.toNumber(),
-    date: t.date.toISOString(),
-  }));
 
   const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
   const monthlyMap: Record<string, { month: string; receitas: number; despesas: number }> = {};
@@ -81,8 +75,8 @@ export default async function DashboardPage({
     const d = new Date(t.date);
     const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
     if (monthlyMap[key]) {
-      if (t.type === "INCOME") monthlyMap[key].receitas += t.amount.toNumber();
-      else monthlyMap[key].despesas += t.amount.toNumber();
+      if (t.type === "INCOME") monthlyMap[key].receitas += t.amount;
+      else monthlyMap[key].despesas += t.amount;
     }
   }
   const monthlyData = Object.values(monthlyMap);
@@ -110,7 +104,7 @@ export default async function DashboardPage({
         budgetItems={budgetItems}
         month={month}
         year={year}
-        transactions={serializedTransactions}
+        transactions={transactions}
         monthlyData={monthlyData}
       />
     </div>

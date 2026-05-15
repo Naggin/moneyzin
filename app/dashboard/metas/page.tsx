@@ -25,15 +25,15 @@ export default async function MetasPage({
     getCachedTransactions(userId, year, month),
   ]);
 
-  const budgets = Object.fromEntries(budgetRows.map((b) => [b.category, b.amount.toNumber()]));
+  const budgets = Object.fromEntries(budgetRows.map((b) => [b.category, b.amount]));
 
   const budgetItems = budgetRows
     .map((b) => ({
       category: b.category,
-      limit: b.amount.toNumber(),
+      limit: b.amount,
       spent: transactions
         .filter((t) => t.type === "EXPENSE" && t.category === b.category)
-        .reduce((sum: number, t) => sum + t.amount.toNumber(), 0),
+        .reduce((sum: number, t) => sum + t.amount, 0),
     }))
     .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
 
